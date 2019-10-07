@@ -36,15 +36,19 @@ To that end, we introduce a framework for training, quantizing and evaluating th
 ### Training
 
 Full Precision Training:
+
 ```python train.py --method DQN --task breakout --precision 32 --quantization_method quantization_aware --output_path dqn_breakout_quantaware_precision=32```
 
 8-bit Quantization Aware Training:
+
 ```python train.py --method DQN --task breakout --precision 8 --quantization_method quantization_aware --output_path dqn_breakout_quantaware_precision=8```
 
 8-bit Post-training Quantization:
+
 ```python train.py --method DQN --task breakout --precision 8 --quantization_method post_train_quantization --output_path dqn_breakout_posttrainquant_precision=8```
 
 ### Evaluating
+
 ```python evaluate.py --task breakout --input_path dqn_breakout_posttrainquant_precision=8```
 
 ## Results
