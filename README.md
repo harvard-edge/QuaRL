@@ -1,18 +1,18 @@
 # Quantized Reinforcement Learning (QuaRL)
 Code for QuaRL, a framework for evaluating the effects of quantization on reinforcement learning policies across different environments, training algorithms and quantization methods. 
 
-Supported Environments:
-* Atari (Pong, Breakout, BeamRider, ...)
-* OpenAI Gym (Walker2D, HalfCheetah, BipedalWalker, MountainCarContinuous, ...)
-* 
+**Supported Environments**
+* Atari
+* OpenAI Gym 
+* PyBullet
 
-Supported Reinforcement Learning Algorithms:
+**Supported Reinforcement Learning Algorithms**
 * Proximal Policy Optimization (PPO)
 * Actor Critic (A2C)
 * Deep Deterministic Policy Gradients (DDPG)
 * DQN (Deep Q Networks)
 
-Supported quantization methods
+**Supported quantization methods**
 * Post-training Quantization
 * Quantization Aware Training
 
