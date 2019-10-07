@@ -25,6 +25,27 @@ Read the paper here for more information: https://arxiv.org/abs/1910.01055
 4. [Citations](#Citations)
 
 ## Introduction
+Deep reinforcement learning is used for many tasks including game playing, robotics and transportation. However, deep reinforcement learning policies are extremely resource intensive due to the computationally expensive nature of the neural networks that power them. The computationally expensive nature of these policies not only make training slow and expensive, but also hinder deployment on resource limited devices like drones.
+
+One solution to improving neural network performance is quantization, a method that reduces the precision of neural network weights to enable training and inference with fast low-precision operations. Motivated by recent trends demonstrating that image models may be quantized to < 8 bits without sacrificing performance, we investigate whether the same is true for reinforcement learning models.
+
+To that end, we introduce a framework for training, quantizing and evaluating the effects of different quantization methods on various reinforcement learning tasks and training algorithms. This code forms the backbone of the experimental setup used for our paper (https://arxiv.org/abs/1910.01055). 
+
 ## Quickstart
+
+### Training
+
+Full Precision Training:
+```python train.py --method DQN --task breakout --precision 32 --quantization_method quantization_aware --output_path dqn_breakout_quantaware_precision=32```
+
+8-bit Quantization Aware Training:
+```python train.py --method DQN --task breakout --precision 8 --quantization_method quantization_aware --output_path dqn_breakout_quantaware_precision=8```
+
+8-bit Post-training Quantization:
+```python train.py --method DQN --task breakout --precision 8 --quantization_method post_train_quantization --output_path dqn_breakout_posttrainquant_precision=8```
+
+### Evaluating
+```python evaluate.py --task breakout --input_path dqn_breakout_posttrainquant_precision=8```
+
 ## Results
 ## Citations
