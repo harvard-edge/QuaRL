@@ -59,5 +59,10 @@ python train.py --method DQN --task breakout --precision 8 --quantization_method
 python evaluate.py --task breakout --input_path dqn_breakout_posttrainquant_precision=8
 ```
 
+### Help
+```
+python train.py --help
+```
+
 ## Results
 ## Citations
