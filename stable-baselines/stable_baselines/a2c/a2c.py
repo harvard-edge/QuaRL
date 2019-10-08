@@ -180,6 +180,7 @@ class A2C(ActorCriticRLModel):
                 self.proba_step = step_model.proba_step
                 self.value = step_model.value
                 self.initial_state = step_model.initial_state
+                self.saver = tf.train.Saver()
                 tf.global_variables_initializer().run(session=self.sess)
 
                 self.summary = tf.summary.merge_all()
@@ -285,8 +286,8 @@ class A2C(ActorCriticRLModel):
                     logger.dump_tabular()
 
         return self
-
-    def save(self, save_path, cloudpickle=False):
+    
+    def save(self, save_path):
         data = {
             "gamma": self.gamma,
             "n_steps": self.n_steps,
@@ -308,8 +309,14 @@ class A2C(ActorCriticRLModel):
 
         params_to_save = self.get_parameters()
 
-        self._save_to_file(save_path, data=data, params=params_to_save, cloudpickle=cloudpickle)
+        self._save_to_file(save_path, data=data, params=params_to_save)
+        one, second = "/".join(save_path.split("/")[:-1]),save_path.split("/")[-1]
 
+        with self.graph.as_default():
+            tf.train.write_graph(self.sess.graph_def, one, second+".pb")
+        # with self.sess.graph.as_default()
+        #saver = tf.train.Saver()
+            self.saver.save(self.sess, save_path+".ckpt")
 
 class A2CRunner(AbstractEnvRunner):
     def __init__(self, env, model, n_steps=5, gamma=0.99):

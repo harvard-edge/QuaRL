@@ -255,6 +255,7 @@ class PPO2(ActorCriticRLModel):
                 self.proba_step = act_model.proba_step
                 self.value = act_model.value
                 self.initial_state = act_model.initial_state
+                self.saver = tf.train.Saver()
                 tf.global_variables_initializer().run(session=self.sess)  # pylint: disable=E1101
 
                 self.summary = tf.summary.merge_all()
@@ -415,8 +416,8 @@ class PPO2(ActorCriticRLModel):
                         break
 
             return self
-
-    def save(self, save_path, cloudpickle=False):
+    
+    def save(self, save_path):
         data = {
             "gamma": self.gamma,
             "n_steps": self.n_steps,
@@ -440,7 +441,14 @@ class PPO2(ActorCriticRLModel):
 
         params_to_save = self.get_parameters()
 
-        self._save_to_file(save_path, data=data, params=params_to_save, cloudpickle=cloudpickle)
+        self._save_to_file(save_path, data=data, params=params_to_save)
+        one, second = "/".join(save_path.split("/")[:-1]),save_path.split("/")[-1]
+
+        with self.graph.as_default():
+            tf.train.write_graph(self.sess.graph_def, one, second+".pb")
+        # with self.sess.graph.as_default()
+        #saver = tf.train.Saver()
+            self.saver.save(self.sess, save_path+".ckpt")
 
 
 class Runner(AbstractEnvRunner):

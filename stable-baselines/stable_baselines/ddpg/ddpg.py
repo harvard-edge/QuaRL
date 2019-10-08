@@ -452,7 +452,7 @@ class DDPG(OffPolicyRLModel):
                                        if "obs_rms" in var.name]
                 self.ret_rms_params = [var for var in tf.global_variables()
                                        if "ret_rms" in var.name]
-
+                self.saver = tf.train.Saver()
                 with self.sess.as_default():
                     self._initialize(self.sess)
 
@@ -1071,7 +1071,7 @@ class DDPG(OffPolicyRLModel):
                 self.obs_rms_params +
                 self.ret_rms_params)
 
-    def save(self, save_path, cloudpickle=False):
+    def save(self, save_path):
         data = {
             "observation_space": self.observation_space,
             "action_space": self.action_space,
@@ -1108,8 +1108,14 @@ class DDPG(OffPolicyRLModel):
 
         self._save_to_file(save_path,
                            data=data,
-                           params=params_to_save,
-                           cloudpickle=cloudpickle)
+                           params=params_to_save)
+        one, second = "/".join(save_path.split("/")[:-1]),save_path.split("/")[-1]
+
+        with self.graph.as_default():
+            tf.train.write_graph(self.sess.graph_def, one, second+".pb")
+        # with self.sess.graph.as_default()
+        #saver = tf.train.Saver()
+            self.saver.save(self.sess, save_path+".ckpt")
 
     @classmethod
     def load(cls, load_path, env=None, custom_objects=None, **kwargs):
