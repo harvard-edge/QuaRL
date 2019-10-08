@@ -13,20 +13,12 @@ parser.add_argument('--env', type=str, nargs='+', default="CartPole-v1", help='e
 parser.add_argument('--algo', help='RL Algorithm', default='ppo2',
                         type=str, required=False, choices=list(ALGOS.keys()))
 parser.add_argument('-q', '--quant-bit-width', help='Set bit width for quantization', default=8, type=int)
-parser.add_argument('--base', help="Set base directory for saved models", default="/home/vj-reddi/quantization-air-learning/", type=str)
+parser.add_argument('--base', help="Set base directory for saved models", default="/".join(os.path.dirname(os.path.abspath(__file__))[:-1]), type=str)
 args = parser.parse_args()
-#path = '/home/vj-reddi/quantization-air-learning/quant_train/dqn/BreakoutNoFrameskip-v4.pb'
 
-#base = "/home/vj-reddi/quantization-air-learning/"
-if args.quant_bit_width == 8:
-    quant_train = False
-    log_path = os.path.join(args.base, "quant_train/train/", args.algo)
-    #print(args.env[0])
-    path = os.path.join(log_path, "{}_{}".format(args.env[0], get_latest_run_id(log_path, args.env[0])), args.env[0] + ".pb")
-else:
-    quant_train = False
-    log_path = os.path.join(args.base, "variable_bit/train/", str(args.quant_bit_width), args.algo)
-    path = os.path.join(log_path, "{}_{}".format(args.env[0], get_latest_run_id(log_path, args.env[0])), args.env[0] + ".pb")
+quant_train = "eval"
+log_path = os.path.join(args.base, "quant_train/train/", args.algo)
+path = os.path.join(log_path, "{}_{}".format(args.env[0], get_latest_run_id(log_path, args.env[0])), args.env[0] + ".pb")
 
 print("Loading models from ", path, "\n")
 class Algo(ALGOS[args.algo]):
@@ -42,7 +34,7 @@ class Algo(ALGOS[args.algo]):
                              "Stored kwargs: {}, specified kwargs: {}".format(data['policy_kwargs'],
                                                                               kwargs['policy_kwargs']))
 
-        model = cls(policy=data["policy"], env=None, _init_setup_model=False, quant_bit_width=args.quant_bit_width, quant_train=quant_train)
+        model = cls(policy=data["policy"], env=None, _init_setup_model=False, w_bits=args.quant_bit_width, act_bits=args.quant_bit_width, quant_train="eval")
         model.__dict__.update(data)
         model.__dict__.update(kwargs)
         model.set_env(env)
@@ -59,10 +51,7 @@ class Algo(ALGOS[args.algo]):
 
 
 model = Algo.load(path[:-2] + "pkl")
-if args.quant_bit_width == 8:
-    eval_graph_file = os.path.join(args.base, "quant_train/eval/", args.algo, args.env[0] + ".pb")
-else:
-    eval_graph_file = os.path.join(args.base, "variable_bit/eval/", args.algo, args.env[0] + ".pb")
+eval_graph_file = os.path.join(args.base, "quant_train/eval/", args.algo, args.env[0] + ".pb")
 
 one, second = "/".join(eval_graph_file.split("/")[:-1]), eval_graph_file.split("/")[-1]
 print("Saving to", eval_graph_file[:-3])
