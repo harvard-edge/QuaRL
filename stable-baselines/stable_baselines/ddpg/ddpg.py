@@ -198,7 +198,7 @@ class DDPG(OffPolicyRLModel):
                  normalize_returns=False, enable_popart=False, observation_range=(-5., 5.), critic_l2_reg=0.,
                  return_range=(-np.inf, np.inf), actor_lr=1e-4, critic_lr=1e-3, clip_norm=None, reward_scale=1.,
                  render=False, render_eval=False, memory_limit=None, buffer_size=50000, random_exploration=0.0,
-                 verbose=0, tensorboard_log=None, _init_setup_model=True, policy_kwargs=None,
+                 verbose=0, tensorboard_log=None, _init_setup_model=True, w_bits=None, act_bits=None, quant_train=None, quant_delay=None, policy_kwargs=None,
                  full_tensorboard_log=False):
 
         super(DDPG, self).__init__(policy=policy, env=env, replay_buffer=None,
@@ -300,7 +300,14 @@ class DDPG(OffPolicyRLModel):
         self.target_params = None
         self.obs_rms_params = None
         self.ret_rms_params = None
-
+        self.quant_train = quant_train
+        self.quant_delay = quant_delay
+        if w_bits != None:
+            self.w_bits = w_bits
+            if act_bits == None:
+                self.act_bits = w_bits
+            else:
+                self.act_bits = act_bits
         if _init_setup_model:
             self.setup_model()
 
@@ -425,6 +432,11 @@ class DDPG(OffPolicyRLModel):
                             tf.summary.image('observation', self.obs_train)
                         else:
                             tf.summary.histogram('observation', self.obs_train)
+                g = tf.get_default_graph()
+                if self.quant_train == "train":
+                    tf.contrib.quantize.experimental_create_training_graph(input_graph=g, weight_bits=self.w_bits, activation_bits=self.act_bits, quant_delay=self.quant_delay)
+                elif self.quant_train == "eval":
+                    tf.contrib.quantize.experimental_create_eval_graph(input_graph=g, weight_bits=self.w_bits, activation_bits=self.act_bits)
 
                 with tf.variable_scope("Adam_mpi", reuse=False):
                     self._setup_actor_optimizer()

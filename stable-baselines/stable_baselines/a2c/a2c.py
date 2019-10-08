@@ -42,7 +42,7 @@ class A2C(ActorCriticRLModel):
 
     def __init__(self, policy, env, gamma=0.99, n_steps=5, vf_coef=0.25, ent_coef=0.01, max_grad_norm=0.5,
                  learning_rate=7e-4, alpha=0.99, epsilon=1e-5, lr_schedule='constant', verbose=0, tensorboard_log=None,
-                 _init_setup_model=True, policy_kwargs=None, full_tensorboard_log=False):
+                 _init_setup_model=True, w_bits=None, act_bits=None, quant_train=None, quant_delay=None, policy_kwargs=None, full_tensorboard_log=False):
 
         super(A2C, self).__init__(policy=policy, env=env, verbose=verbose, requires_vec_env=True,
                                   _init_setup_model=_init_setup_model, policy_kwargs=policy_kwargs)
@@ -80,7 +80,14 @@ class A2C(ActorCriticRLModel):
         self.learning_rate_schedule = None
         self.summary = None
         self.episode_reward = None
-
+        self.quant_delay = quant_delay
+        self.quant_train = quant_train
+        if w_bits != None:
+            self.w_bits = w_bits
+            if act_bits == None:
+                self.act_bits = w_bits
+            else:
+                self.act_bits = act_bits
         # if we are loading, it is possible the environment is not known, however the obs and action space are known
         if _init_setup_model:
             self.setup_model()
@@ -156,6 +163,13 @@ class A2C(ActorCriticRLModel):
                         else:
                             tf.summary.histogram('observation', train_model.obs_ph)
 
+                g = tf.get_default_graph()
+                if self.quant_train == "train":
+                    tf.contrib.quantize.experimental_create_training_graph(input_graph=g, weight_bits=self.w_bits, activation_bits=self.act_bits, quant_delay=self.quant_delay)
+                elif self.quant_train == "eval":
+                    tf.contrib.quantize.experimental_create_eval_graph(input_graph=g, weight_bits=self.w_bits, activation_bits=self.act_bits)
+
+                
                 trainer = tf.train.RMSPropOptimizer(learning_rate=self.learning_rate_ph, decay=self.alpha,
                                                     epsilon=self.epsilon)
                 self.apply_backprop = trainer.apply_gradients(grads)

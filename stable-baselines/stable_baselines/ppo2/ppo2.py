@@ -49,7 +49,7 @@ class PPO2(ActorCriticRLModel):
 
     def __init__(self, policy, env, gamma=0.99, n_steps=128, ent_coef=0.01, learning_rate=2.5e-4, vf_coef=0.5,
                  max_grad_norm=0.5, lam=0.95, nminibatches=4, noptepochs=4, cliprange=0.2, cliprange_vf=None,
-                 verbose=0, tensorboard_log=None, _init_setup_model=True, policy_kwargs=None,
+                 verbose=0, tensorboard_log=None, _init_setup_model=True, w_bits=None, act_bits=None, quant_delay=5000000, quant_train = None, policy_kwargs=None,
                  full_tensorboard_log=False):
 
         super(PPO2, self).__init__(policy=policy, env=env, verbose=verbose, requires_vec_env=True,
@@ -95,6 +95,14 @@ class PPO2(ActorCriticRLModel):
         self.n_batch = None
         self.summary = None
         self.episode_reward = None
+        self.quant_delay = quant_delay
+        self.quant_train = quant_train
+        if w_bits != None:
+            self.w_bits = w_bits
+            if act_bits == None:
+                self.act_bits = w_bits
+            else:
+                self.act_bits = act_bits
 
         if _init_setup_model:
             self.setup_model()
@@ -206,6 +214,13 @@ class PPO2(ActorCriticRLModel):
                     if self.max_grad_norm is not None:
                         grads, _grad_norm = tf.clip_by_global_norm(grads, self.max_grad_norm)
                     grads = list(zip(grads, self.params))
+                
+                g = tf.get_default_graph()
+                if self.quant_train == "train":
+                    tf.contrib.quantize.experimental_create_training_graph(input_graph=g, weight_bits=self.w_bits, activation_bits=self.act_bits, quant_delay=self.quant_delay)
+                elif self.quant_train == "eval":
+                    tf.contrib.quantize.experimental_create_eval_graph(input_graph=g, weight_bits=self.w_bits, activation_bits=self.act_bits)
+
                 trainer = tf.train.AdamOptimizer(learning_rate=self.learning_rate_ph, epsilon=1e-5)
                 self._train = trainer.apply_gradients(grads)
 
