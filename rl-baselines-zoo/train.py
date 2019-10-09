@@ -44,7 +44,7 @@ if __name__ == '__main__':
                         type=int)
     parser.add_argument('--log-interval', help='Override log interval (default: -1, no change)', default=-1,
                         type=int)
-    parser.add_argument('-f', '--log-folder', help='Log folder', type=str, default='logs')
+    parser.add_argument('-f', '--log-folder', help='Log folder', type=str, default="/".join(os.path.dirname(os.path.abspath(__file__)).split("/")[:-1]))
     parser.add_argument('--seed', help='Random generator seed', type=int, default=0)
     parser.add_argument('--n-trials', help='Number of trials for optimizing hyperparameters', type=int, default=10)
     parser.add_argument('-optimize', '--optimize-hyperparameters', action='store_true', default=False,
@@ -314,9 +314,13 @@ if __name__ == '__main__':
         model.learn(n_timesteps, **kwargs)
 
         # Save trained model
-        log_path = "{}/{}/".format(args.log_folder, args.algo)
+        log_path = "{}/quant_train/train/{}/{}/".format(args.log_folder, args.quant_bit_width, args.algo)
+        print(args.log_folder, log_path)
         save_path = os.path.join(log_path, "{}_{}".format(env_id, get_latest_run_id(log_path, env_id) + 1))
+        #print(params_path)
         params_path = "{}/{}".format(save_path, env_id)
+        print(params_path)
+        os.makedirs(save_path, exist_ok=True)
         os.makedirs(params_path, exist_ok=True)
 
         # Only save worker of rank 0 when using mpi
@@ -324,13 +328,16 @@ if __name__ == '__main__':
             print("Saving to {}".format(save_path))
 
             model.save("{}/{}".format(save_path, env_id))
+            print("Saved models")
             # Save hyperparams
             with open(os.path.join(params_path, 'config.yml'), 'w') as f:
                 yaml.dump(saved_hyperparams, f)
-
+            print("Saved yaml")
             if normalize:
                 # Unwrap
                 if isinstance(env, VecFrameStack):
                     env = env.venv
                 # Important: save the running average, for testing the agent we need that normalization
                 env.save_running_average(params_path)
+            print("done")
+            env.close()
