@@ -4,20 +4,12 @@ Code for QuaRL, a framework for evaluating the effects of quantization on reinfo
 
 ![](https://github.com/harvard-edge/quarl/blob/master/docs/QuaRL-intro-figure.png)
 
-**Supported Environments**
-* Atari
-* OpenAI Gym 
-* PyBullet
-
-**Supported Reinforcement Learning Algorithms**
-* Proximal Policy Optimization (PPO)
-* Actor Critic (A2C)
-* Deep Deterministic Policy Gradients (DDPG)
-* DQN (Deep Q Networks)
-
-**Supported quantization methods**
-* Post-training Quantization
-* Quantization Aware Training
+| Environments       | Reinforcement Learning Algorithms           | Quantization Methods  |
+| ------------- |:-------------:| -----:|
+| Atari Games      | Proximal Policy Optimization (PPO) | Post-training Quantization |
+| OpenAI Gym     | Actor Critic (A2C)     |   Quantization Aware Training |
+| PyBullet | Deep Deterministic Policy Gradients (DDPG)     |     |
+|           | DQN (Deep Q Networks)           | |
 
 Read the paper here for more information: https://arxiv.org/abs/1910.01055
 
