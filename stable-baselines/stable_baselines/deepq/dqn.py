@@ -58,7 +58,7 @@ class DQN(OffPolicyRLModel):
 
         # TODO: replay_buffer refactoring
         super(DQN, self).__init__(policy=policy, env=env, replay_buffer=None, verbose=verbose, policy_base=DQNPolicy,
-                                  requires_vec_env=False, mixed_precision=False, policy_kwargs=policy_kwargs)
+                                  requires_vec_env=False, policy_kwargs=policy_kwargs)
 
         self.param_noise = param_noise
         self.learning_starts = learning_starts
