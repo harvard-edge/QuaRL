@@ -29,8 +29,19 @@ One solution to improving neural network performance is quantization, a method t
 To that end, we introduce a framework for training, quantizing and evaluating the effects of different quantization methods on various reinforcement learning tasks and training algorithms. This code forms the backbone of the experimental setup used for our paper (https://arxiv.org/abs/1910.01055). 
 
 ## Quickstart
+We suggest that you create an environment using conda first
 ```
-./setup.sh
+conda create --name quarl python=3.6
+conda activate quarl
+```
+For ubuntu:
+```
+./setup_ubuntu.sh
+cd quant-scripts`
+```
+For MacOS:
+```
+./setup_mac.sh
 cd quant-scripts`
 ```
 
