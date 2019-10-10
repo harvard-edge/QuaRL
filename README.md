@@ -84,5 +84,20 @@ or: python visualize_pkl.py --folder=<folder>
 
 The parameter distribution plot will be saved under ```<folder>```, and the detailed statistical information will be saved in ```output.txt``` under ```<folder>```.
 
+For example, here is an example of visualizing the weights distribution for breakout envionment trained using DQN, PPO, and A2C:
+![](https://github.com/harvard-edge/quarl/blob/master/docs/breakout-weight-distribution.png)
+
 ## Results
+For results, please check our [paper](https://arxiv.org/abs/1910.01055) 
 ## Citations
+To cite this repository in publications:
+```
+@misc{quantized-rl,
+    title={Quantized Reinforcement Learning (QUARL)},
+    author={Srivatsan Krishnan and Sharad Chitlangia and Maximilian Lam and Zishen Wan and Aleksandra Faust and Vijay Janapa Reddi},
+    year={2019},
+    eprint={1910.01055},
+    archivePrefix={arXiv},
+    primaryClass={cs.LG}
+}
+```
