@@ -1,5 +1,4 @@
 # Quantized Reinforcement Learning (QuaRL)
-**Stable Code Release**:9th October 2019
 
 Code for QuaRL, a framework for evaluating the effects of quantization on reinforcement learning policies across different environments, training algorithms and quantization methods. 
 
