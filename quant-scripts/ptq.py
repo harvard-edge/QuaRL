@@ -67,6 +67,23 @@ os.makedirs(ckpt_path, exist_ok=True)
 os.makedirs(ckpt_model_path, exist_ok=True)
 
 is_atari = 'NoFrameskip' in args.env
+is_bullet = "BulletEnv" in args.env
+if_cont = "Continuous" in args.env
+#print(args.base)
+if is_atari:
+    input_nodes = {"dqn":"deepq/input/Cast", "ppo2":"input/Cast", "a2c":"input/Cast", "ddpg":"input/input/Ob"}
+    output_nodes = {"dqn":"deepq/model/add", "ppo2":"model/pi/add", "a2c":"model/pi/add", "ddpg":"model/pi/Tanh"}
+elif is_bullet:
+    input_nodes = {"ppo2":"input/Cast", "a2c":"input/Cast", "ddpg":"input/input/Ob"}
+    output_nodes = {"ppo2":"model/pi/add", "a2c":"model/pi/add", "ddpg":"model/pi/Tanh"}
+else
+    else:
+        input_nodes = {"ppo2":"input/Ob", "a2c":"input/Ob", "ddpg":"input/input/Ob"}
+        output_nodes = {"ppo2":"model/pi/add", "a2c":"model/pi/add", "ddpg":"model/pi/Tanh"}
+    else:
+        input_nodes = {"dqn":"deepq/input/Ob", "ppo2":"input/Ob", "a2c":"input/Ob", "ddpg":"input/input/Ob"}
+        output_nodes = {"dqn":"deepq/model/add", "ppo2":"model/pi/add", "a2c":"model/pi/add", "ddpg":"model/pi/Tanh"}
+
 model_path = os.path.join(models_path, args.algo, args.env + ".pkl")
 print("Loading model from", model_path)
 
