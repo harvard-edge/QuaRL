@@ -1,9 +1,5 @@
-matplotlib.pyplot
+matplotlib
 numpy
-os
-pickle
-sys
-getopt
 box2d
 box2d-kengz
 pyyaml
