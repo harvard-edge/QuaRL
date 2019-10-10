@@ -30,6 +30,7 @@ To that end, we introduce a framework for training, quantizing and evaluating th
 
 ## Quickstart
 ```
+./setup.sh
 cd quant-scripts`
 ```
 
