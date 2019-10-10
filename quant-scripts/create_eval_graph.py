@@ -17,7 +17,7 @@ parser.add_argument('--base', help="Set base directory for saved models", defaul
 args = parser.parse_args()
 
 quant_train = "eval"
-log_path = os.path.join(args.base, "quant_train/train/", args.algo)
+log_path = os.path.join(args.base, "quant_train/train/", str(args.quant_bit_width),args.algo)
 path = os.path.join(log_path, "{}_{}".format(args.env[0], get_latest_run_id(log_path, args.env[0])), args.env[0] + ".pb")
 
 print("Loading models from ", path, "\n")
@@ -50,7 +50,7 @@ class Algo(ALGOS[args.algo]):
         return model
 
 
-model = Algo.load(path[:-2] + "pkl")
+model = Algo.load(path[:-2] + "zip")
 eval_graph_file = os.path.join(args.base, "quant_train/eval/", args.algo, args.env[0] + ".pb")
 
 one, second = "/".join(eval_graph_file.split("/")[:-1]), eval_graph_file.split("/")[-1]

@@ -113,7 +113,8 @@ def make_env(env_id, rank=0, seed=0, log_dir=None, wrapper_class=None):
                     env with
     """
     if log_dir is None and log_dir != '':
-        log_dir = "/tmp/gym/{}/".format(int(time.time()))
+        #log_dir = "/tmp/gym/{}/".format(int(time.time()))
+         log_dir = "/home/sharadchitlangia24sc/logs"
     os.makedirs(log_dir, exist_ok=True)
 
     def _init():
