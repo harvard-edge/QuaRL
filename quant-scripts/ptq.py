@@ -76,8 +76,8 @@ if is_atari:
 elif is_bullet:
     input_nodes = {"ppo2":"input/Cast", "a2c":"input/Cast", "ddpg":"input/input/Ob"}
     output_nodes = {"ppo2":"model/pi/add", "a2c":"model/pi/add", "ddpg":"model/pi/Tanh"}
-else
-    else:
+else:
+    if if_cont:
         input_nodes = {"ppo2":"input/Ob", "a2c":"input/Ob", "ddpg":"input/input/Ob"}
         output_nodes = {"ppo2":"model/pi/add", "a2c":"model/pi/add", "ddpg":"model/pi/Tanh"}
     else:
