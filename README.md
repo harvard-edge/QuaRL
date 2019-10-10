@@ -29,31 +29,32 @@ One solution to improving neural network performance is quantization, a method t
 To that end, we introduce a framework for training, quantizing and evaluating the effects of different quantization methods on various reinforcement learning tasks and training algorithms. This code forms the backbone of the experimental setup used for our paper (https://arxiv.org/abs/1910.01055). 
 
 ## Quickstart
+```
+cd quant-scripts`
+```
 
 ### Training
 
-Full Precision Training:
+8-bit Quantization Aware Training and testing:
 
 ```
-python train.py --method DQN --task breakout --precision 32 --quantization_method quantization_aware --output_path dqn_breakout_quantaware_precision=32
-```
-
-8-bit Quantization Aware Training:
-
-```
-python train.py --method DQN --task breakout --precision 8 --quantization_method quantization_aware --output_path dqn_breakout_quantaware_precision=8
+python qat.py --algo DQN --env BreakoutNoFrameskip-v4 -q 7 --quant-delay 5000000 -n 10000000
 ```
 
 8-bit Post-training Quantization:
 
 ```
-python train.py --method DQN --task breakout --precision 8 --quantization_method post_train_quantization --output_path dqn_breakout_posttrainquant_precision=8
+python ptq.py --algo DQN --env BreakoutNoFrameskip-v4 --int 1
 ```
-
-### Evaluating
+fp16 Post-training Quantization:
 
 ```
-python evaluate.py --task breakout --input_path dqn_breakout_posttrainquant_precision=8
+python ptq.py --algo DQN --env BreakoutNoFrameskip-v4 --fp16 1
+```
+Run fp32 model using TFLite (as a control experiment):
+
+```
+python ptq.py --algo DQN --env BreakoutNoFrameskip-v4 --fp32 1
 ```
 
 ### Help
