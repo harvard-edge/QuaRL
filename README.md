@@ -4,6 +4,8 @@ Code for QuaRL, a framework for evaluating the effects of quantization on reinfo
 
 ![](https://github.com/harvard-edge/quarl/blob/master/docs/QuaRL-intro-figure.png)
 
+The framework currently support the following environments, rl algorithms and quantization methods.
+
 | Environments       | Reinforcement Learning Algorithms           | Quantization Methods  |
 | ------------- |:-------------:| -----:|
 | Atari Games      | Proximal Policy Optimization (PPO) | Post-training Quantization |
