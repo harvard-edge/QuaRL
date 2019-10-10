@@ -87,10 +87,11 @@ else:
 model_path = os.path.join(models_path, args.algo, args.env + ".pkl")
 print("Loading model from", model_path)
 
+input_node, output_node = input_nodes[args.algo], output_nodes[args.algo]
 og_model = Algo.load(model_path)
 og_model.save_graph(ckpt_model_path, args.env)
-subprocess.call(['./freeze.sh', args.algo, args.env, args.output_node, type, quarl_directory])
-converter = tf.lite.TFLiteConverter.from_frozen_graph(frozen_model_path, [args.input_node], [args.output_node])
+subprocess.call(['./freeze.sh', args.algo, args.env, output_node, type, quarl_directory])
+converter = tf.lite.TFLiteConverter.from_frozen_graph(frozen_model_path, [input_node], [output_node])
 
 if args.int:
     print("Int 8 weight quantization")
