@@ -2,6 +2,8 @@
 
 Code for QuaRL, a framework for evaluating the effects of quantization on reinforcement learning policies across different environments, training algorithms and quantization methods. 
 
+![](https://github.com/harvard-edge/quarl/blob/master/docs/QuaRL-intro-figure.png)
+
 **Supported Environments**
 * Atari
 * OpenAI Gym 
