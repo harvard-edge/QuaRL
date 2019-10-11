@@ -10,13 +10,11 @@ The framework currently support the following environments, rl algorithms and qu
 - Atari Games
 - OpenAI Gym
 - PyBullet
-
 #### RL Algorithms
 - Proximal Policy Optimization (PPO)
 - Actor Critic (A2C)
 - Deep Deterministic Policy Gradients (DDPG)
 - DQN (Deep Q Networks)
-
 #### Quantization Methods
 - Post-training Quantization
 - Quantization Aware Training
