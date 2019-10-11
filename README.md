@@ -45,12 +45,6 @@ For MacOS:
 cd quant-scripts`
 ```
 
-### 8-bit Quantization Aware Training and testing:
-
-```
-python qat.py --algo dqn --env BreakoutNoFrameskip-v4 -q 7 --quant-delay 5000000 -n 10000000
-```
-
 ### 8-bit Post-training Quantization:
 
 ```
@@ -65,6 +59,11 @@ python ptq.py --algo dqn --env BreakoutNoFrameskip-v4 --fp16 1
 
 ```
 python ptq.py --algo dqn --env BreakoutNoFrameskip-v4 --fp32 1
+```
+### 8-bit Quantization Aware Training and testing:
+
+```
+python qat.py --algo dqn --env BreakoutNoFrameskip-v4 -q 7 --quant-delay 5000000 -n 10000000
 ```
 
 ### Visualizing
