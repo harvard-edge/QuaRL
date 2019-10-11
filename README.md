@@ -4,7 +4,7 @@ Code for QuaRL, a framework for evaluating the effects of quantization on reinfo
 
 ![](https://github.com/harvard-edge/quarl/blob/master/docs/QuaRL-intro-figure.png)
 
-The framework currently support the following environments, rl algorithms and quantization methods.
+The framework currently support the following environments, RL algorithms and quantization methods.
 
 #### Environments
 - Atari Games
