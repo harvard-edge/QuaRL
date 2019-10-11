@@ -43,12 +43,12 @@ conda activate quarl
 For ubuntu:
 ```
 ./setup_ubuntu.sh
-cd quant-scripts`
+cd quant-scripts
 ```
 For MacOS:
 ```
 ./setup_mac.sh
-cd quant-scripts`
+cd quant-scripts
 ```
 
 ### 8-bit Post-training Quantization:
