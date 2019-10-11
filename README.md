@@ -6,12 +6,14 @@ Code for QuaRL, a framework for evaluating the effects of quantization on reinfo
 
 The framework currently support the following environments, rl algorithms and quantization methods.
 
+
 | Environments       | Reinforcement Learning Algorithms           | Quantization Methods  |
-| ------------- |:-------------:| -----:|
+| :------------- |:-------------:| -----:|
 | Atari Games      | Proximal Policy Optimization (PPO) | Post-training Quantization |
 | OpenAI Gym     | Actor Critic (A2C)     |   Quantization Aware Training |
 | PyBullet | Deep Deterministic Policy Gradients (DDPG)     |     |
 |           | DQN (Deep Q Networks)           | |
+
 
 Read the paper here for more information: https://arxiv.org/abs/1910.01055
 
@@ -68,7 +70,7 @@ QAT usually requires training a model from scratch. We suggest setting quant-del
 python qat.py --algo dqn --env BreakoutNoFrameskip-v4 -q 7 --quant-delay 5000000 -n 10000000
 ```
 
-### Visualizing
+### Visualization
 Visualizing the model's parameter (weight & bias) distribution.
 
 If the saved model is in '.pb' format, please run 
@@ -89,7 +91,8 @@ For example, here is an example of visualizing the weights distribution for brea
 ![](https://github.com/harvard-edge/quarl/blob/master/docs/breakout-weight-distribution.png)
 
 ## Results
-For results, please check our [paper](https://arxiv.org/abs/1910.01055) 
+For results, please check our [paper](https://arxiv.org/abs/1910.01055). 
+
 ## Citations
 To cite this repository in publications:
 ```
