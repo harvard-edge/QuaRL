@@ -62,6 +62,8 @@ python ptq.py --algo dqn --env BreakoutNoFrameskip-v4 --fp32 1
 ```
 ### 8-bit Quantization Aware Training and testing:
 
+QAT usually requires training a model from scratch. We suggest setting quant-delay as half the total number of training steps. The official TF guidelines suggest finetuning min, max quantization ranges after the model has fully converged but in the case of RL over-training usually results in bad performance. QAT results also vary a lot depending on training so exact rewards as mentioned in the paper are not always guaranteed.
+
 ```
 python qat.py --algo dqn --env BreakoutNoFrameskip-v4 -q 7 --quant-delay 5000000 -n 10000000
 ```
