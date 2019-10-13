@@ -1,9 +1,24 @@
-# Quantized Reinforcement Learning (QuaRL)
 <p align="center">
   <img src="https://github.com/harvard-edge/quarl/blob/master/docs/quarl.png">
 </p>
 
+# Quantized Reinforcement Learning (QuaRL)
+
 Code for QuaRL, a framework for evaluating the effects of quantization on reinforcement learning policies across different environments, training algorithms and quantization methods. 
+
+# Table of Contents
+1. [Introduction](#Introduction)
+2. [Quickstart](#Quickstart)
+3. [Results](#Results)
+4. [Citations](#Citations)
+
+## Introduction
+
+Deep reinforcement learning is used for many tasks including game playing, robotics and transportation. However, deep reinforcement learning policies are extremely resource intensive due to the computationally expensive nature of the neural networks that power them. The computationally expensive nature of these policies not only make training slow and expensive, but also hinder deployment on resource limited devices like drones.
+
+One solution to improving neural network performance is quantization, a method that reduces the precision of neural network weights to enable training and inference with fast low-precision operations. Motivated by recent trends demonstrating that image models may be quantized to < 8 bits without sacrificing performance, we investigate whether the same is true for reinforcement learning models.
+
+To that end, we introduce the end-to-end framework (shown below) for training, quantizing and evaluating the effects of different quantization methods on various reinforcement learning tasks and training algorithms. This code forms the backbone of the experimental setup used for our paper (https://arxiv.org/abs/1910.01055). 
 
 ![](https://github.com/harvard-edge/quarl/blob/master/docs/QuaRL-intro-figure.png)
 
@@ -23,19 +38,6 @@ The framework currently support the following environments, RL algorithms and qu
 - Quantization Aware Training
 
 Read the paper here for more information: https://arxiv.org/abs/1910.01055
-
-# Table of Contents
-1. [Introduction](#Introduction)
-2. [Quickstart](#Quickstart)
-3. [Results](#Results)
-4. [Citations](#Citations)
-
-## Introduction
-Deep reinforcement learning is used for many tasks including game playing, robotics and transportation. However, deep reinforcement learning policies are extremely resource intensive due to the computationally expensive nature of the neural networks that power them. The computationally expensive nature of these policies not only make training slow and expensive, but also hinder deployment on resource limited devices like drones.
-
-One solution to improving neural network performance is quantization, a method that reduces the precision of neural network weights to enable training and inference with fast low-precision operations. Motivated by recent trends demonstrating that image models may be quantized to < 8 bits without sacrificing performance, we investigate whether the same is true for reinforcement learning models.
-
-To that end, we introduce a framework for training, quantizing and evaluating the effects of different quantization methods on various reinforcement learning tasks and training algorithms. This code forms the backbone of the experimental setup used for our paper (https://arxiv.org/abs/1910.01055). 
 
 ## Quickstart
 We suggest that you create an environment using conda first
