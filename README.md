@@ -1,6 +1,7 @@
 # Quantized Reinforcement Learning (QuaRL)
-
-![](https://github.com/harvard-edge/quarl/blob/master/docs/quarl.png)
+<p align="center">
+  <img src="https://github.com/harvard-edge/quarl/blob/master/docs/quarl.png">
+</p>
 
 Code for QuaRL, a framework for evaluating the effects of quantization on reinforcement learning policies across different environments, training algorithms and quantization methods. 
 
