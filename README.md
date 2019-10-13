@@ -1,17 +1,26 @@
 # Quantized Reinforcement Learning (QuaRL)
+<p align="center">
+  <img src="https://github.com/harvard-edge/quarl/blob/master/docs/quarl.png">
+</p>
 
 Code for QuaRL, a framework for evaluating the effects of quantization on reinforcement learning policies across different environments, training algorithms and quantization methods. 
 
 ![](https://github.com/harvard-edge/quarl/blob/master/docs/QuaRL-intro-figure.png)
 
-The framework currently support the following environments, rl algorithms and quantization methods.
+The framework currently support the following environments, RL algorithms and quantization methods.
 
-| Environments       | Reinforcement Learning Algorithms           | Quantization Methods  |
-| ------------- |:-------------:| -----:|
-| Atari Games      | Proximal Policy Optimization (PPO) | Post-training Quantization |
-| OpenAI Gym     | Actor Critic (A2C)     |   Quantization Aware Training |
-| PyBullet | Deep Deterministic Policy Gradients (DDPG)     |     |
-|           | DQN (Deep Q Networks)           | |
+#### Environments
+- Atari Games
+- OpenAI Gym
+- PyBullet
+#### RL Algorithms
+- Proximal Policy Optimization (PPO)
+- Actor Critic (A2C)
+- Deep Deterministic Policy Gradients (DDPG)
+- DQN (Deep Q Networks)
+#### Quantization Methods
+- Post-training Quantization
+- Quantization Aware Training
 
 Read the paper here for more information: https://arxiv.org/abs/1910.01055
 
@@ -37,12 +46,12 @@ conda activate quarl
 For ubuntu:
 ```
 ./setup_ubuntu.sh
-cd quant-scripts`
+cd quant-scripts
 ```
 For MacOS:
 ```
 ./setup_mac.sh
-cd quant-scripts`
+cd quant-scripts
 ```
 
 ### 8-bit Post-training Quantization:
@@ -68,19 +77,19 @@ QAT usually requires training a model from scratch. We suggest setting quant-del
 python qat.py --algo dqn --env BreakoutNoFrameskip-v4 -q 7 --quant-delay 5000000 -n 10000000
 ```
 
-### Visualizing
+### Visualization
 Visualizing the model's parameter (weight & bias) distribution.
 
 If the saved model is in '.pb' format, please run 
 ```
-python visualize_pb.py -f <folder>
-or: python visualize_pb.py --folder=<folder>
+python visualize_pb.py -f <folder> -b <num_bits>
+or: python visualize_pb.py --folder=<folder> --num_bits=<num_bits>
 ```
 
 If the saved model is in '.pkl' format, please run 
 ```
-python visualize_pkl.py -f <folder>
-or: python visualize_pkl.py --folder=<folder>
+python visualize_pkl.py -f <folder> -b <num_bits>
+or: python visualize_pkl.py --folder=<folder> --num_bits=<num_bits>
 ```
 
 The parameter distribution plot will be saved under ```<folder>```, and the detailed statistical information will be saved in ```output.txt``` under ```<folder>```.
@@ -89,7 +98,8 @@ For example, here is an example of visualizing the weights distribution for brea
 ![](https://github.com/harvard-edge/quarl/blob/master/docs/breakout-weight-distribution.png)
 
 ## Results
-For results, please check our [paper](https://arxiv.org/abs/1910.01055) 
+For results, please check our [paper](https://arxiv.org/abs/1910.01055). 
+
 ## Citations
 To cite this repository in publications:
 ```
