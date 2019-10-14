@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://github.com/harvard-edge/quarl/blob/master/docs/QuaRL.jpg">
+  <img src="https://github.com/harvard-edge/quarl/blob/master/docs/quarl.png">
 </p>
 
 # Quantized Reinforcement Learning (QuaRL)
