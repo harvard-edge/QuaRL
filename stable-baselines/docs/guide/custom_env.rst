@@ -34,9 +34,13 @@ That is to say, your environment must implement the following methods (and inher
 
     def step(self, action):
       ...
+      return observation, reward, done, info
     def reset(self):
       ...
-    def render(self, mode='human', close=False):
+      return observation  # reward, done, info can't be included
+    def render(self, mode='human'):
+      ...
+    def close (self):
       ...
 
 
@@ -44,13 +48,28 @@ Then you can define and train a RL agent with:
 
 .. code-block:: python
 
-  # Instantiate and wrap the env
-  env = DummyVecEnv([lambda: CustomEnv(arg1, ...)])
+  # Instantiate the env
+  env = CustomEnv(arg1, ...)
   # Define and Train the agent
-  model = A2C(CnnPolicy, env).learn(total_timesteps=1000)
+  model = A2C('CnnPolicy', env).learn(total_timesteps=1000)
 
 
-You can find a `complete guide online <https://github.com/openai/gym/blob/master/docs/creating-environments.md>`_
+To check that your environment follows the gym interface, please use:
+
+.. code-block:: python
+
+	from stable_baselines.common.env_checker import check_env
+
+	env = CustomEnv(arg1, ...)
+	# It will check your custom environment and output additional warnings if needed
+	check_env(env)
+
+
+
+We have created a `colab notebook <https://colab.research.google.com/github/araffin/rl-tutorial-jnrr19/blob/master/5_custom_gym_env.ipynb>`_ for
+a concrete example of creating a custom environment.
+
+You can also find a `complete guide online <https://github.com/openai/gym/blob/master/docs/creating-environments.md>`_
 on creating a custom Gym environment.
 
 

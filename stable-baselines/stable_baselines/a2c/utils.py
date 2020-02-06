@@ -493,7 +493,7 @@ def get_by_index(input_tensor, idx):
     """
     assert len(input_tensor.get_shape()) == 2
     assert len(idx.get_shape()) == 1
-    idx_flattened = tf.range(0, input_tensor.shape[0]) * input_tensor.shape[1] + idx
+    idx_flattened = tf.range(0, input_tensor.shape[0], dtype=idx.dtype) * input_tensor.shape[1] + idx
     offset_tensor = tf.gather(tf.reshape(input_tensor, [-1]),  # flatten input
                               idx_flattened)  # use flattened indices
     return offset_tensor
@@ -567,8 +567,6 @@ def total_episode_reward_logger(rew_acc, rewards, masks, writer, steps):
     :param masks: (np.array bool) the end of episodes
     :param writer: (TensorFlow Session.writer) the writer to log to
     :param steps: (int) the current timestep
-    :return: (np.array float) the updated total running reward
-    :return: (np.array float) the updated total running reward
     """
     with tf.variable_scope("environment_info", reuse=True):
         for env_idx in range(rewards.shape[0]):
@@ -585,5 +583,3 @@ def total_episode_reward_logger(rew_acc, rewards, masks, writer, steps):
                     summary = tf.Summary(value=[tf.Summary.Value(tag="episode_reward", simple_value=rew_acc[env_idx])])
                     writer.add_summary(summary, steps + dones_idx[k, 0])
                 rew_acc[env_idx] = sum(rewards[env_idx, dones_idx[-1, 0]:])
-
-    return rew_acc

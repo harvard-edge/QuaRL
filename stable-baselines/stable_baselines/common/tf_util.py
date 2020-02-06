@@ -2,6 +2,7 @@ import os
 import collections
 import functools
 import multiprocessing
+from typing import Set
 
 import numpy as np
 import tensorflow as tf
@@ -29,8 +30,8 @@ def huber_loss(tensor, delta=1.0):
     Reference: https://en.wikipedia.org/wiki/Huber_loss
 
     :param tensor: (TensorFlow Tensor) the input value
-    :param delta: (float) huber loss delta value
-    :return: (TensorFlow Tensor) huber loss output
+    :param delta: (float) Huber loss delta value
+    :return: (TensorFlow Tensor) Huber loss output
     """
     return tf.where(
         tf.abs(tensor) < delta,
@@ -79,7 +80,7 @@ def single_threaded_session(make_default=False, graph=None):
 
 def in_session(func):
     """
-    wrappes a function so that it is in a TensorFlow Session
+    Wraps a function so that it is in a TensorFlow Session
 
     :param func: (function) the function to wrap
     :return: (function)
@@ -93,7 +94,7 @@ def in_session(func):
     return newfunc
 
 
-ALREADY_INITIALIZED = set()
+ALREADY_INITIALIZED = set()  # type: Set[tf.Variable]
 
 
 def initialize(sess=None):
@@ -240,7 +241,7 @@ def flatgrad(loss, var_list, clip_norm=None):
     :param loss: (float) the loss value
     :param var_list: ([TensorFlow Tensor]) the variables
     :param clip_norm: (float) clip the gradients (disabled if None)
-    :return: ([TensorFlow Tensor]) flattend gradient
+    :return: ([TensorFlow Tensor]) flattened gradient
     """
     grads = tf.gradients(loss, var_list)
     if clip_norm is not None:

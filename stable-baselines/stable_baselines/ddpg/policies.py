@@ -23,7 +23,6 @@ class DDPGPolicy(BasePolicy):
         super(DDPGPolicy, self).__init__(sess, ob_space, ac_space, n_env, n_steps, n_batch, reuse=reuse, scale=scale,
                                          add_action_ph=True)
         assert isinstance(ac_space, Box), "Error: the action space must be of type gym.spaces.Box"
-        assert (np.abs(ac_space.low) == ac_space.high).all(), "Error: the action space low and high must be symmetric"
         self.qvalue_fn = None
         self.policy = None
 
@@ -32,7 +31,7 @@ class DDPGPolicy(BasePolicy):
         creates an actor object
 
         :param obs: (TensorFlow Tensor) The observation placeholder (can be None for default placeholder)
-        :param reuse: (bool) whether or not to resue parameters
+        :param reuse: (bool) whether or not to reuse parameters
         :param scope: (str) the scope name of the actor
         :return: (TensorFlow Tensor) the output tensor
         """
@@ -44,7 +43,7 @@ class DDPGPolicy(BasePolicy):
 
         :param obs: (TensorFlow Tensor) The observation placeholder (can be None for default placeholder)
         :param action: (TensorFlow Tensor) The action placeholder (can be None for default placeholder)
-        :param reuse: (bool) whether or not to resue parameters
+        :param reuse: (bool) whether or not to reuse parameters
         :param scope: (str) the scope name of the critic
         :return: (TensorFlow Tensor) the output tensor
         """

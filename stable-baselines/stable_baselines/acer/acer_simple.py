@@ -1,4 +1,5 @@
 import time
+import warnings
 
 import numpy as np
 import tensorflow as tf
@@ -69,8 +70,12 @@ class ACER(ActorCriticRLModel):
     :param n_steps: (int) The number of steps to run for each environment per update
         (i.e. batch size is n_steps * n_env where n_env is number of environment copies running in parallel)
     :param num_procs: (int) The number of threads for TensorFlow operations
+
+        .. deprecated:: 2.9.0
+            Use `n_cpu_tf_sess` instead.
+
     :param q_coef: (float) The weight for the loss on the Q value
-    :param ent_coef: (float) The weight for the entropic loss
+    :param ent_coef: (float) The weight for the entropy loss
     :param max_grad_norm: (float) The clipping value for the maximum gradient
     :param learning_rate: (float) The initial learning rate for the RMS prop optimizer
     :param lr_schedule: (str) The type of scheduler for the learning rate update ('linear', 'constant',
@@ -93,16 +98,24 @@ class ACER(ActorCriticRLModel):
     :param policy_kwargs: (dict) additional arguments to be passed to the policy on creation
     :param full_tensorboard_log: (bool) enable additional logging when using tensorboard
         WARNING: this logging can take a lot of space quickly
+    :param seed: (int) Seed for the pseudo-random generators (python, numpy, tensorflow).
+        If None (default), use random seed. Note that if you want completely deterministic
+        results, you must set `n_cpu_tf_sess` to 1.
+    :param n_cpu_tf_sess: (int) The number of threads for TensorFlow operations
+        If None, the number of cpu of the current machine will be used.
     """
 
-    def __init__(self, policy, env, gamma=0.99, n_steps=20, num_procs=1, q_coef=0.5, ent_coef=0.01, max_grad_norm=10,
+    def __init__(self, policy, env, gamma=0.99, n_steps=20, num_procs=None, q_coef=0.5, ent_coef=0.01, max_grad_norm=10,
                  learning_rate=7e-4, lr_schedule='linear', rprop_alpha=0.99, rprop_epsilon=1e-5, buffer_size=5000,
                  replay_ratio=4, replay_start=1000, correction_term=10.0, trust_region=True,
                  alpha=0.99, delta=1, verbose=0, tensorboard_log=None,
-                 _init_setup_model=True, policy_kwargs=None, full_tensorboard_log=False):
+                 _init_setup_model=True, policy_kwargs=None,
+                 full_tensorboard_log=False, seed=None, n_cpu_tf_sess=1):
 
-        super(ACER, self).__init__(policy=policy, env=env, verbose=verbose, requires_vec_env=True,
-                                   _init_setup_model=_init_setup_model, policy_kwargs=policy_kwargs)
+        if num_procs is not None:
+            warnings.warn("num_procs will be removed in a future version (v3.x.x) "
+                          "use n_cpu_tf_sess instead", DeprecationWarning)
+            n_cpu_tf_sess = num_procs
 
         self.n_steps = n_steps
         self.replay_ratio = replay_ratio
@@ -120,34 +133,35 @@ class ACER(ActorCriticRLModel):
         self.rprop_epsilon = rprop_epsilon
         self.learning_rate = learning_rate
         self.lr_schedule = lr_schedule
-        self.num_procs = num_procs
         self.tensorboard_log = tensorboard_log
         self.full_tensorboard_log = full_tensorboard_log
 
-        self.graph = None
-        self.sess = None
         self.action_ph = None
         self.done_ph = None
         self.reward_ph = None
         self.mu_ph = None
         self.learning_rate_ph = None
-        self.params = None
         self.polyak_model = None
         self.learning_rate_schedule = None
         self.run_ops = None
         self.names_ops = None
         self.train_model = None
         self.step_model = None
-        self.step = None
         self.proba_step = None
-        self.initial_state = None
         self.n_act = None
         self.n_batch = None
         self.summary = None
-        self.episode_reward = None
+
+        super(ACER, self).__init__(policy=policy, env=env, verbose=verbose, requires_vec_env=True,
+                                   _init_setup_model=_init_setup_model, policy_kwargs=policy_kwargs,
+                                   seed=seed, n_cpu_tf_sess=n_cpu_tf_sess)
+
 
         if _init_setup_model:
             self.setup_model()
+
+    def _make_runner(self) -> AbstractEnvRunner:
+        return _Runner(env=self.env, model=self, n_steps=self.n_steps)
 
     def _get_pretrain_placeholders(self):
         policy = self.step_model
@@ -184,8 +198,8 @@ class ACER(ActorCriticRLModel):
 
             self.graph = tf.Graph()
             with self.graph.as_default():
-                self.sess = tf_util.make_session(num_cpu=self.num_procs, graph=self.graph)
-
+                self.sess = tf_util.make_session(num_cpu=self.n_cpu_tf_sess, graph=self.graph)
+                self.set_random_seed(self.seed)
                 n_batch_step = None
                 if issubclass(self.policy, RecurrentActorCriticPolicy):
                     n_batch_step = self.n_envs
@@ -374,13 +388,13 @@ class ACER(ActorCriticRLModel):
                     tf.summary.scalar('rewards', tf.reduce_mean(self.reward_ph))
                     tf.summary.scalar('learning_rate', tf.reduce_mean(self.learning_rate))
                     tf.summary.scalar('advantage', tf.reduce_mean(adv))
-                    tf.summary.scalar('action_probabilty', tf.reduce_mean(self.mu_ph))
+                    tf.summary.scalar('action_probability', tf.reduce_mean(self.mu_ph))
 
                     if self.full_tensorboard_log:
                         tf.summary.histogram('rewards', self.reward_ph)
                         tf.summary.histogram('learning_rate', self.learning_rate)
                         tf.summary.histogram('advantage', adv)
-                        tf.summary.histogram('action_probabilty', self.mu_ph)
+                        tf.summary.histogram('action_probability', self.mu_ph)
                         if tf_util.is_image(self.observation_space):
                             tf.summary.image('observation', train_model.obs_ph)
                         else:
@@ -457,22 +471,20 @@ class ACER(ActorCriticRLModel):
 
         return self.names_ops, step_return[1:]  # strip off _train
 
-    def learn(self, total_timesteps, callback=None, seed=None, log_interval=100, tb_log_name="ACER",
+    def learn(self, total_timesteps, callback=None, log_interval=100, tb_log_name="ACER",
               reset_num_timesteps=True):
 
         new_tb_log = self._init_num_timesteps(reset_num_timesteps)
 
         with SetVerbosity(self.verbose), TensorboardWriter(self.graph, self.tensorboard_log, tb_log_name, new_tb_log) \
                 as writer:
-            self._setup_learn(seed)
+            self._setup_learn()
 
             self.learning_rate_schedule = Scheduler(initial_value=self.learning_rate, n_values=total_timesteps,
                                                     schedule=self.lr_schedule)
 
             episode_stats = EpisodeStats(self.n_steps, self.n_envs)
 
-            runner = _Runner(env=self.env, model=self, n_steps=self.n_steps)
-            self.episode_reward = np.zeros((self.n_envs,))
             if self.replay_ratio > 0:
                 buffer = Buffer(env=self.env, n_steps=self.n_steps, size=self.buffer_size)
             else:
@@ -482,25 +494,25 @@ class ACER(ActorCriticRLModel):
 
             # n_batch samples, 1 on_policy call and multiple off-policy calls
             for steps in range(0, total_timesteps, self.n_batch):
-                enc_obs, obs, actions, rewards, mus, dones, masks = runner.run()
+                enc_obs, obs, actions, rewards, mus, dones, masks = self.runner.run()
                 episode_stats.feed(rewards, dones)
 
                 if buffer is not None:
                     buffer.put(enc_obs, actions, rewards, mus, dones, masks)
 
                 if writer is not None:
-                    self.episode_reward = total_episode_reward_logger(self.episode_reward,
-                                                                      rewards.reshape((self.n_envs, self.n_steps)),
-                                                                      dones.reshape((self.n_envs, self.n_steps)),
-                                                                      writer, self.num_timesteps)
+                    total_episode_reward_logger(self.episode_reward,
+                                                rewards.reshape((self.n_envs, self.n_steps)),
+                                                dones.reshape((self.n_envs, self.n_steps)),
+                                                writer, self.num_timesteps)
 
                 # reshape stuff correctly
-                obs = obs.reshape(runner.batch_ob_shape)
-                actions = actions.reshape([runner.n_batch])
-                rewards = rewards.reshape([runner.n_batch])
-                mus = mus.reshape([runner.n_batch, runner.n_act])
-                dones = dones.reshape([runner.n_batch])
-                masks = masks.reshape([runner.batch_ob_shape[0]])
+                obs = obs.reshape(self.runner.batch_ob_shape)
+                actions = actions.reshape([self.n_batch])
+                rewards = rewards.reshape([self.n_batch])
+                mus = mus.reshape([self.n_batch, self.n_act])
+                dones = dones.reshape([self.n_batch])
+                masks = masks.reshape([self.runner.batch_ob_shape[0]])
 
                 names_ops, values_ops = self._train_step(obs, actions, rewards, dones, mus, self.initial_state, masks,
                                                          self.num_timesteps, writer)
@@ -511,7 +523,7 @@ class ACER(ActorCriticRLModel):
                     if callback(locals(), globals()) is False:
                         break
 
-                if self.verbose >= 1 and (int(steps / runner.n_batch) % log_interval == 0):
+                if self.verbose >= 1 and (int(steps / self.n_batch) % log_interval == 0):
                     logger.record_tabular("total_timesteps", self.num_timesteps)
                     logger.record_tabular("fps", int(steps / (time.time() - t_start)))
                     # IMP: In EpisodicLife env, during training, we get done=True at each loss of life,
@@ -523,19 +535,21 @@ class ACER(ActorCriticRLModel):
                         logger.record_tabular(name, float(val))
                     logger.dump_tabular()
 
-                if self.replay_ratio > 0 and buffer.has_atleast(self.replay_start):
+                if (self.replay_ratio > 0 and
+                    buffer is not None and
+                    buffer.has_atleast(self.replay_start)):
                     samples_number = np.random.poisson(self.replay_ratio)
                     for _ in range(samples_number):
                         # get obs, actions, rewards, mus, dones from buffer.
                         obs, actions, rewards, mus, dones, masks = buffer.get()
 
                         # reshape stuff correctly
-                        obs = obs.reshape(runner.batch_ob_shape)
-                        actions = actions.reshape([runner.n_batch])
-                        rewards = rewards.reshape([runner.n_batch])
-                        mus = mus.reshape([runner.n_batch, runner.n_act])
-                        dones = dones.reshape([runner.n_batch])
-                        masks = masks.reshape([runner.batch_ob_shape[0]])
+                        obs = obs.reshape(self.runner.batch_ob_shape)
+                        actions = actions.reshape([self.n_batch])
+                        rewards = rewards.reshape([self.n_batch])
+                        mus = mus.reshape([self.n_batch, self.n_act])
+                        dones = dones.reshape([self.n_batch])
+                        masks = masks.reshape([self.runner.batch_ob_shape[0]])
 
                         self._train_step(obs, actions, rewards, dones, mus, self.initial_state, masks,
                                          self.num_timesteps)
@@ -562,6 +576,8 @@ class ACER(ActorCriticRLModel):
             "observation_space": self.observation_space,
             "action_space": self.action_space,
             "n_envs": self.n_envs,
+            'n_cpu_tf_sess': self.n_cpu_tf_sess,
+            'seed': self.seed,
             "_vectorize_action": self._vectorize_action,
             "policy_kwargs": self.policy_kwargs
         }
@@ -618,7 +634,7 @@ class _Runner(AbstractEnvRunner):
         """
         Run a step leaning of the model
 
-        :return: ([float], [float], [float], [float], [float], [bool], [float])
+        :return: ([float], [float], [int64], [float], [float], [bool], [float])
                  encoded observation, observations, actions, rewards, mus, dones, masks
         """
         enc_obs = [self.obs]
@@ -646,7 +662,7 @@ class _Runner(AbstractEnvRunner):
 
         enc_obs = np.asarray(enc_obs, dtype=self.obs_dtype).swapaxes(1, 0)
         mb_obs = np.asarray(mb_obs, dtype=self.obs_dtype).swapaxes(1, 0)
-        mb_actions = np.asarray(mb_actions, dtype=np.int32).swapaxes(1, 0)
+        mb_actions = np.asarray(mb_actions, dtype=np.int64).swapaxes(1, 0)
         mb_rewards = np.asarray(mb_rewards, dtype=np.float32).swapaxes(1, 0)
         mb_mus = np.asarray(mb_mus, dtype=np.float32).swapaxes(1, 0)
         mb_dones = np.asarray(mb_dones, dtype=np.bool).swapaxes(1, 0)

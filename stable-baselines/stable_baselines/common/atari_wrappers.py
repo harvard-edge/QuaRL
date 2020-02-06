@@ -3,7 +3,7 @@ from collections import deque
 import numpy as np
 import gym
 from gym import spaces
-import cv2
+import cv2  # pytype:disable=import-error
 cv2.ocl.setUseOpenCL(False)
 
 
@@ -276,7 +276,7 @@ class LazyFrames(object):
 
 def make_atari(env_id):
     """
-    Create a wrapped atari envrionment
+    Create a wrapped atari Environment
 
     :param env_id: (str) the environment ID
     :return: (Gym Environment) the wrapped atari environment

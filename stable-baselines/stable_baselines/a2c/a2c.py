@@ -1,5 +1,4 @@
 import time
-from collections import deque
 
 import gym
 import numpy as np
@@ -38,14 +37,17 @@ class A2C(ActorCriticRLModel):
     :param policy_kwargs: (dict) additional arguments to be passed to the policy on creation
     :param full_tensorboard_log: (bool) enable additional logging when using tensorboard
         WARNING: this logging can take a lot of space quickly
+    :param seed: (int) Seed for the pseudo-random generators (python, numpy, tensorflow).
+        If None (default), use random seed. Note that if you want completely deterministic
+        results, you must set `n_cpu_tf_sess` to 1.
+    :param n_cpu_tf_sess: (int) The number of threads for TensorFlow operations
+        If None, the number of cpu of the current machine will be used.
     """
 
     def __init__(self, policy, env, gamma=0.99, n_steps=5, vf_coef=0.25, ent_coef=0.01, max_grad_norm=0.5,
-                 learning_rate=7e-4, alpha=0.99, epsilon=1e-5, lr_schedule='constant', verbose=0, tensorboard_log=None,
-                 _init_setup_model=True, w_bits=None, act_bits=None, quant_train=None, quant_delay=None, policy_kwargs=None, full_tensorboard_log=False):
-
-        super(A2C, self).__init__(policy=policy, env=env, verbose=verbose, requires_vec_env=True,
-                                  _init_setup_model=_init_setup_model, policy_kwargs=policy_kwargs)
+                 learning_rate=7e-4, alpha=0.99, epsilon=1e-5, lr_schedule='constant', verbose=0,
+                 tensorboard_log=None, _init_setup_model=True, w_bits=None, act_bits=None, quant_train=None, quant_delay=None, policy_kwargs=None,
+                 full_tensorboard_log=False, seed=None, n_cpu_tf_sess=None):
 
         self.n_steps = n_steps
         self.gamma = gamma
@@ -59,8 +61,6 @@ class A2C(ActorCriticRLModel):
         self.tensorboard_log = tensorboard_log
         self.full_tensorboard_log = full_tensorboard_log
 
-        self.graph = None
-        self.sess = None
         self.learning_rate_ph = None
         self.n_batch = None
         self.actions_ph = None
@@ -69,28 +69,25 @@ class A2C(ActorCriticRLModel):
         self.pg_loss = None
         self.vf_loss = None
         self.entropy = None
-        self.params = None
         self.apply_backprop = None
         self.train_model = None
         self.step_model = None
-        self.step = None
         self.proba_step = None
         self.value = None
         self.initial_state = None
         self.learning_rate_schedule = None
         self.summary = None
-        self.episode_reward = None
-        self.quant_delay = quant_delay
-        self.quant_train = quant_train
-        if w_bits != None:
-            self.w_bits = w_bits
-            if act_bits == None:
-                self.act_bits = w_bits
-            else:
-                self.act_bits = act_bits
+
+        super(A2C, self).__init__(policy=policy, env=env, verbose=verbose, requires_vec_env=True,
+                                  _init_setup_model=_init_setup_model, policy_kwargs=policy_kwargs,
+                                  seed=seed, n_cpu_tf_sess=n_cpu_tf_sess)
+
         # if we are loading, it is possible the environment is not known, however the obs and action space are known
         if _init_setup_model:
             self.setup_model()
+
+    def _make_runner(self) -> AbstractEnvRunner:
+        return A2CRunner(self.env, self, n_steps=self.n_steps, gamma=self.gamma)
 
     def _get_pretrain_placeholders(self):
         policy = self.train_model
@@ -106,7 +103,8 @@ class A2C(ActorCriticRLModel):
 
             self.graph = tf.Graph()
             with self.graph.as_default():
-                self.sess = tf_util.make_session(graph=self.graph)
+                self.set_random_seed(self.seed)
+                self.sess = tf_util.make_session(num_cpu=self.n_cpu_tf_sess, graph=self.graph)
 
                 self.n_batch = self.n_envs * self.n_steps
 
@@ -163,13 +161,6 @@ class A2C(ActorCriticRLModel):
                         else:
                             tf.summary.histogram('observation', train_model.obs_ph)
 
-                g = tf.get_default_graph()
-                if self.quant_train == "train":
-                    tf.contrib.quantize.experimental_create_training_graph(input_graph=g, weight_bits=self.w_bits, activation_bits=self.act_bits, quant_delay=self.quant_delay)
-                elif self.quant_train == "eval":
-                    tf.contrib.quantize.experimental_create_eval_graph(input_graph=g, weight_bits=self.w_bits, activation_bits=self.act_bits)
-
-                
                 trainer = tf.train.RMSPropOptimizer(learning_rate=self.learning_rate_ph, decay=self.alpha,
                                                     epsilon=self.epsilon)
                 self.apply_backprop = trainer.apply_gradients(grads)
@@ -180,7 +171,6 @@ class A2C(ActorCriticRLModel):
                 self.proba_step = step_model.proba_step
                 self.value = step_model.value
                 self.initial_state = step_model.initial_state
-                self.saver = tf.train.Saver()
                 tf.global_variables_initializer().run(session=self.sess)
 
                 self.summary = tf.summary.merge_all()
@@ -231,38 +221,32 @@ class A2C(ActorCriticRLModel):
 
         return policy_loss, value_loss, policy_entropy
 
-    def learn(self, total_timesteps, callback=None, seed=None, log_interval=100, tb_log_name="A2C",
+    def learn(self, total_timesteps, callback=None, log_interval=100, tb_log_name="A2C",
               reset_num_timesteps=True):
 
         new_tb_log = self._init_num_timesteps(reset_num_timesteps)
 
         with SetVerbosity(self.verbose), TensorboardWriter(self.graph, self.tensorboard_log, tb_log_name, new_tb_log) \
                 as writer:
-            self._setup_learn(seed)
-
+            self._setup_learn()
             self.learning_rate_schedule = Scheduler(initial_value=self.learning_rate, n_values=total_timesteps,
                                                     schedule=self.lr_schedule)
-
-            runner = A2CRunner(self.env, self, n_steps=self.n_steps, gamma=self.gamma)
-            self.episode_reward = np.zeros((self.n_envs,))
-            # Training stats (when using Monitor wrapper)
-            ep_info_buf = deque(maxlen=100)
 
             t_start = time.time()
             for update in range(1, total_timesteps // self.n_batch + 1):
                 # true_reward is the reward without discount
-                obs, states, rewards, masks, actions, values, ep_infos, true_reward = runner.run()
-                ep_info_buf.extend(ep_infos)
+                obs, states, rewards, masks, actions, values, ep_infos, true_reward = self.runner.run()
+                self.ep_info_buf.extend(ep_infos)
                 _, value_loss, policy_entropy = self._train_step(obs, states, rewards, masks, actions, values,
                                                                  self.num_timesteps // self.n_batch, writer)
                 n_seconds = time.time() - t_start
                 fps = int((update * self.n_batch) / n_seconds)
 
                 if writer is not None:
-                    self.episode_reward = total_episode_reward_logger(self.episode_reward,
-                                                                      true_reward.reshape((self.n_envs, self.n_steps)),
-                                                                      masks.reshape((self.n_envs, self.n_steps)),
-                                                                      writer, self.num_timesteps)
+                    total_episode_reward_logger(self.episode_reward,
+                                                true_reward.reshape((self.n_envs, self.n_steps)),
+                                                masks.reshape((self.n_envs, self.n_steps)),
+                                                writer, self.num_timesteps)
 
                 self.num_timesteps += self.n_batch
 
@@ -280,14 +264,14 @@ class A2C(ActorCriticRLModel):
                     logger.record_tabular("policy_entropy", float(policy_entropy))
                     logger.record_tabular("value_loss", float(value_loss))
                     logger.record_tabular("explained_variance", float(explained_var))
-                    if len(ep_info_buf) > 0 and len(ep_info_buf[0]) > 0:
-                        logger.logkv('ep_reward_mean', safe_mean([ep_info['r'] for ep_info in ep_info_buf]))
-                        logger.logkv('ep_len_mean', safe_mean([ep_info['l'] for ep_info in ep_info_buf]))
+                    if len(self.ep_info_buf) > 0 and len(self.ep_info_buf[0]) > 0:
+                        logger.logkv('ep_reward_mean', safe_mean([ep_info['r'] for ep_info in self.ep_info_buf]))
+                        logger.logkv('ep_len_mean', safe_mean([ep_info['l'] for ep_info in self.ep_info_buf]))
                     logger.dump_tabular()
 
         return self
-    
-    def save(self, save_path):
+
+    def save(self, save_path, cloudpickle=False):
         data = {
             "gamma": self.gamma,
             "n_steps": self.n_steps,
@@ -303,20 +287,16 @@ class A2C(ActorCriticRLModel):
             "observation_space": self.observation_space,
             "action_space": self.action_space,
             "n_envs": self.n_envs,
+            "n_cpu_tf_sess": self.n_cpu_tf_sess,
+            "seed": self.seed,
             "_vectorize_action": self._vectorize_action,
             "policy_kwargs": self.policy_kwargs
         }
 
         params_to_save = self.get_parameters()
 
-        self._save_to_file(save_path, data=data, params=params_to_save)
-        one, second = "/".join(save_path.split("/")[:-1]),save_path.split("/")[-1]
+        self._save_to_file(save_path, data=data, params=params_to_save, cloudpickle=cloudpickle)
 
-        with self.graph.as_default():
-            tf.train.write_graph(self.sess.graph_def, one, second+".pb")
-        # with self.sess.graph.as_default()
-        #saver = tf.train.Saver()
-            self.saver.save(self.sess, save_path+".ckpt")
 
 class A2CRunner(AbstractEnvRunner):
     def __init__(self, env, model, n_steps=5, gamma=0.99):
