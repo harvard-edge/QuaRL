@@ -62,21 +62,43 @@ cd quant-scripts
 
 ### Baseline
 #### 8-bit Post-training Quantization:
+The PTQ algorithms require pre-trained models through `rl-baselines-zoo`.
+```
+python new_ptq.py ppo2 MountainCarContinuous-v0 8
+python rl-baselines-zoo/enjoy.py --algo ppo2 --env MountainCarContinuous-v0 --no-render --folder quantized/8/ -n 50000
+```
 
-```
-python new_ptq.py
-python ptq.py --algo dqn --env BreakoutNoFrameskip-v4 --int 1
-```
+Note: PTQ can be run on any numerical precision between 2-32
+
 #### fp16 Post-training Quantization:
 
 ```
-python ptq.py --algo dqn --env BreakoutNoFrameskip-v4 --fp16 1
+python new_ptq.py ppo2 MountainCarContinuous-v0 fp16
+python rl-baselines-zoo/enjoy.py --algo ppo2 --env MountainCarContinuous-v0 --no-render --folder quantized/8/ -n 50000
 ```
-#### Run fp32 model using TFLite (as a control experiment):
 
+#### Benchmark a particular PTQ over an Algorithm, Environment
+```bash
+# Format ./benchmark.sh {algo} {env} {precision}
+./benchmark.sh ppo2 MountainCarContinuous-v0
+
+# Benchmark A2C MsPacman
+./benchmark.sh a2c MsPacmanNoFrameskip-v4
+
+# Create Sweetspot PNG
+python collate.py a2c MsPacmanNoFrameskip-v4
 ```
-python ptq.py --algo dqn --env BreakoutNoFrameskip-v4 --fp32 1
+
+#### Benchmark all algorithms over all environments and collect PNGs for all
+```bash
+./all.sh
+./create_all_pngs.sh
 ```
+
+#### Collate Sweetspot PNGs for all
+
+
+
 #### 8-bit Quantization Aware Training and testing:
 
 QAT usually requires training a model from scratch. We suggest setting quant-delay as half the total number of training steps. The official TF guidelines suggest finetuning min, max quantization ranges after the model has fully converged but in the case of RL over-training usually results in bad performance. QAT results also vary a lot depending on training so exact rewards as mentioned in the paper are not always guaranteed.
@@ -198,7 +220,7 @@ The parameter distribution plot will be saved under ```<folder>```, and the deta
 
 For example, here is an example of visualizing the weights distribution for breakout envionment trained using DQN, PPO, and A2C:
 <p align="center">
-<img src="docs/breakout-weight-distribution.png">
+<img src="docs/breakout-weight-distribution.png" width=200>
 </p>
 
 ## Results
