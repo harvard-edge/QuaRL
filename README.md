@@ -4,7 +4,7 @@
 
 # Quarl: Quantization For Reinforcement Learning
 
-Code for QuaRL, a framework for evaluating the effects of quantization on reinforcement learning policies across different environments, training algorithms and quantization methods. 
+Code for QuaRL, a framework for evaluating the effects of quantization on reinforcement learning policies across different environments, training algorithms and quantization methods and **ActorQ** a quantized distributed RL training setup exhibiting speedups of upto **2.5x**.
 
 # Table of Contents
 1. [Introduction](#Introduction)
@@ -216,7 +216,7 @@ The parameter distribution plot will be saved under ```<folder>```, and the deta
 
 For example, here is an example of visualizing the weights distribution for breakout envionment trained using DQN, PPO, and A2C:
 <p align="center">
-<img src="docs/breakout-weight-distribution.png" width=200>
+<img src="docs/breakout-weight-distribution.png" width=400>
 </p>
 
 ## Results
@@ -225,7 +225,9 @@ For example, here is an example of visualizing the weights distribution for brea
 ![](docs/results_actorQ_speedups.png)
 
 #### Distributed RL Training Breakdown
-![](docs/rl_breakdown.png)
+<p align="center">
+  <img src="docs/rl_breakdown.png" width=400>
+ </p>
 
 For more results, please check our [paper](https://arxiv.org/abs/1910.01055). 
 
