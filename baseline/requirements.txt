@@ -8,4 +8,4 @@ optuna
 pytablewriter
 scikit-optimize
 mpi4py
-tensorflow==1.15.2
+tensorflow==2.3.1
