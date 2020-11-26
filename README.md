@@ -1,6 +1,6 @@
-<p align="center">
+<!-- <p align="center"> -->
 ![](docs/QuaRL.jpg)
-</p>
+<!-- </p> -->
 
 # Quarl: Quantization For Reinforcement Learning
 
