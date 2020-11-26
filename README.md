@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="https://github.com/harvard-edge/quarl/blob/master/docs/QuaRL.jpg">
+![](docs/QuaRL.jpg)
 </p>
 
-# Quarl: Quantized For Reinforcement Learning
+# Quarl: Quantization For Reinforcement Learning
 
 Code for QuaRL, a framework for evaluating the effects of quantization on reinforcement learning policies across different environments, training algorithms and quantization methods. 
 
@@ -14,28 +14,32 @@ Code for QuaRL, a framework for evaluating the effects of quantization on reinfo
 
 ## Introduction
 
-Deep reinforcement learning is used for many tasks including game playing, robotics and transportation. However, deep reinforcement learning policies are extremely resource intensive due to the computationally expensive nature of the neural networks that power them. The computationally expensive nature of these policies not only make training slow and expensive, but also hinder deployment on resource limited devices like drones.
+Deep reinforcement learning has achieved significant milestones, however, the computational demands of reinforcement learning training and inference remain substantial. Using quantization techniques such as **Post Training Quantization** and **Quantization Aware Training**, a well-known technique in reducing computation costs, we perform a systematic study of Reinforcement Learning Algorithms such as A2C, DDPG, DQN, PPO and D4PG on common environments.
 
-One solution to improving neural network performance is quantization, a method that reduces the precision of neural network weights to enable training and inference with fast low-precision operations. Motivated by recent trends demonstrating that image models may be quantized to < 8 bits without sacrificing performance, we investigate whether the same is true for reinforcement learning models.
+Motivated by the effectiveness of PTQ, we propose **ActorQ**, a quantized actor-learner distributed training system that runs learners in full precision and actors in quantized precision (fp16, int8). We demonstrated **end-to-end speedups of 1.5x - 2.5x** in reinforcement learning training with **no loss in reward**. Further, we breakdown the various runtime costs in distributed reinforcement learning training and show the effects of quantization on each.
 
-To that end, we introduce the end-to-end framework (shown below) for training, quantizing and evaluating the effects of different quantization methods on various reinforcement learning tasks and training algorithms. This code forms the backbone of the experimental setup used for our paper (https://arxiv.org/abs/1910.01055). 
+<!-- ![](https://github.com/harvard-edge/quarl/blob/master/docs/QuaRL-intro-figure.png) -->
+![ActorQ](docs/actorQ.png)
 
-![](https://github.com/harvard-edge/quarl/blob/master/docs/QuaRL-intro-figure.png)
 
 The framework currently support the following environments, RL algorithms and quantization methods.
 
 #### Environments
-- Atari Games
+- Atari Learning Environment (through OpenAI Gym)
 - OpenAI Gym
 - PyBullet
+- Mujoco
+- Deepmind Control Suite
 #### RL Algorithms
 - Proximal Policy Optimization (PPO)
 - Actor Critic (A2C)
 - Deep Deterministic Policy Gradients (DDPG)
 - DQN (Deep Q Networks)
+- D4PG (Distributed Distributional Deep Deterministic Gradients)
 #### Quantization Methods
-- Post-training Quantization
-- Quantization Aware Training
+- Post-training Quantization (Located in `baseline`)
+- Quantization Aware Training (Located in `baseline`)
+- **ActorQ (for distributed RL)** (Located in `actorQ`)
 
 Read the paper here for more information: https://arxiv.org/abs/1910.01055
 
@@ -59,6 +63,7 @@ cd quant-scripts
 ### 8-bit Post-training Quantization:
 
 ```
+python new_ptq.p
 python ptq.py --algo dqn --env BreakoutNoFrameskip-v4 --int 1
 ```
 ### fp16 Post-training Quantization:
