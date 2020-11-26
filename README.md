@@ -52,12 +52,12 @@ conda activate quarl
 For ubuntu:
 ```
 ./setup_ubuntu.sh
-cd quant-scripts
+cd baseline
 ```
 For MacOS:
 ```
 ./setup_mac.sh
-cd quant-scripts
+cd baseline
 ```
 
 ### Baseline
@@ -110,6 +110,7 @@ Since our ActorQ implementation requires TF 2.0, we suggest creating a new envir
 ```python
 conda create --name actorq python=3.6
 conda activate actorq
+cd actorQ/d4pg
 ```
 
 #### Setup
