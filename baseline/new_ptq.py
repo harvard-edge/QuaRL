@@ -31,7 +31,6 @@ def check_if_convolution(var, convolutions):
     for i in convolutions:
         if i in var:
             return True
-
     return False
 
 def conv_Q(W, n):
@@ -111,20 +110,8 @@ if __name__=="__main__":
 
                         assign_ops.append(var.assign(qweights[var.name]))
 
-        # print(weights.keys())
-
         for assign_op in assign_ops:
             session.run(assign_op)
-
-        # error = []
-        # for var in vars:
-        #     if 'pi' in var.name:
-        #         if 'w' in var.name:
-        #             print(var.name)
-        #             neww[var.name] = session.run(var.value())
-        #             error.append(neww[var.name] - weights[var.name])
-
-        # print("Error due to quantization {}".format(np.abs(np.mean(error))))
 
         save_path = 'quantized/{}/{}'.format(sys.argv[3], algo)
         os.makedirs(save_path, exist_ok=True)
