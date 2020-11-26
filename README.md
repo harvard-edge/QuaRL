@@ -1,6 +1,6 @@
-<!-- <p align="center"> -->
-![](docs/QuaRL.jpg)
-<!-- </p> -->
+<p align="center">
+<img src="docs/QuaRL.jpg">
+</p>
 
 # Quarl: Quantization For Reinforcement Learning
 
@@ -197,9 +197,9 @@ or: python visualize_pkl.py --folder=<folder> --num_bits=<num_bits>
 The parameter distribution plot will be saved under ```<folder>```, and the detailed statistical information will be saved in ```output.txt``` under ```<folder>```.
 
 For example, here is an example of visualizing the weights distribution for breakout envionment trained using DQN, PPO, and A2C:
-<!-- <p align="center"> -->
-![](docs/breakout-weight-distribution.png)
-<!-- </p> -->
+<p align="center">
+<img src="docs/breakout-weight-distribution.png">
+</p>
 
 ## Results
 #### ActorQ end-to-end speedups
