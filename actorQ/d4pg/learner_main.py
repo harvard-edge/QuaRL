@@ -33,9 +33,6 @@ import zlib
 import pickle
 from multiprocessing import Pool
 from multiprocessing.pool import ThreadPool
-import lz4.frame
-import lz4.block
-#import pytorch_actors
 import torch
 import zstd
 import msgpack
@@ -151,15 +148,9 @@ if __name__ == "__main__":
     steps = 0
 
     def broadcast_variables(weights):
-        #learner.client.insert([tf2_utils.to_numpy(v) for v in 
-        #                       agent_networks["policy"].variables], 
-        #{args.model_table_name : 1.0})
-        #learner.client.insert(weights, {args.model_table_name: 1.0})
         if weights is None:
-          #weights = [tf2_utils.to_numpy(v) for v in agent_networks["policy"].variables]
           weights = [tf2_utils.to_numpy(v) for v in learner.learner._policy_network.variables]  
         learner.client.insert(weights, {args.broadcaster_table_name: 1.0})
-        #learner.client.insert(weights, {args.model_table_name: 1.0})
 
     broadcast_shutdown(0)
     variable_broadcaster = PeriodicBroadcaster(broadcast_variables)
@@ -170,14 +161,6 @@ if __name__ == "__main__":
         with tf.device(args.learner_device_placement):
             learner.learner.step()
             
-            #if i % 50 == 0:
-            #  #  #weights = [tf2_utils.to_numpy(v) for v in agent_networks["policy"].variables]
-            #  weights = [tf2_utils.to_numpy(v) for v in learner.learner._policy_network.variables]
-            #  #  #variable_broadcaster.update(weights)
-            #  broadcast_variables(weights)
-            #  #  #  #  pass
-            
-            #broadcast_variables(None)
             variable_broadcaster.update(None)
 
 

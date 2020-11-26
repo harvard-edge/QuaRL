@@ -34,8 +34,6 @@ import zlib
 import pickle
 from multiprocessing import Pool
 from multiprocessing.pool import ThreadPool
-import lz4.frame
-import lz4.block
 import pytorch_actors
 import torch
 import zstd

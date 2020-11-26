@@ -34,8 +34,6 @@ import zlib
 import pickle
 from multiprocessing import Pool
 from multiprocessing.pool import ThreadPool
-import lz4.frame
-import lz4.block
 import pytorch_actors
 import torch
 import zstd
@@ -76,10 +74,6 @@ if __name__ == "__main__":
     client = reverb.Client(address)
 
     def quantize_and_broadcast_weights(weights, id):
-        #client.insert(weights, 
-        #              {args.model_table_name : 1.0})
-        #return
-
         print("Broadcasting weights", time.time())
         
         # Quantize weights artificially
@@ -106,19 +100,11 @@ if __name__ == "__main__":
         state_dict["id"] = id
 
         # Send over packed params to avoid overhead
-        #for name, child in quantized_actor._modules.items():
-        #    if type(child) == torch.nn.quantized.dynamic.modules.linear.Linear:
-        #        d_name = "%s._packed_params._packed_params.dumped" % name
-        #        state_dict[d_name] = pickle.dumps(child._packed_params._packed_params)
         tstart = time.time()
         weights = [pickle.dumps(state_dict)]
         if args.compress:
             weights = [zlib.compress(x) for x in weights]
-            #weights = [lz4.frame.compress(x) for x in weights]
-        #weights = [lz4.frame.compress(pickle.dumps(state_dict))]
         weights = [np.fromstring(x, dtype=np.uint8) for x in weights]
-        #weights = [zlib.compress(pickle.dumps(state_dict), level=1)]
-        #weights = [np.fromstring(pickle.dumps(state_dict), dtype=np.uint8)]
         print("Compress %f" % (time.time()-tstart))
 
 

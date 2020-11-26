@@ -33,8 +33,6 @@ import copy
 import dm_env
 import gc
 import gym
-import lz4.block
-import lz4.frame
 import numpy as np
 import numpy as np
 import pickle
@@ -81,21 +79,15 @@ class ExternalVariableSource(core.VariableSource):
       d = [x.tobytes() for x in sample.data]  
 
       try:
-        #decoded = [pickle.loads(lz4.frame.decompress(x.tobytes() +  b'\x00\x00\x00\x00')) for x in sample.data]    
-        #decoded = [pickle.loads(zlib.decompress(x.tobytes())) for x in sample.data]
         if self.args["compress"]:
           d = [zlib.decompress(x) for x in d]
-          #d = [lz4.frame.decompress(x +  b'\x00\x00\x00\x00') for x in d]
         tdecompress = time.time()
         decoded = [pickle.loads(x) for x in d]
-        #decoded = [pickle.loads(x) for x in d]    
-        #decoded = [pickle.loads(zlib.decompress(x.item())) for x in sample.data]
-        #decoded = [pickle.loads(x.tobytes()) for x in sample.data]
         tdecode = time.time()
         print("Pull time: %f, Decompress/tobytes time: %f, Deserialize time: %f" % (tend-tstart, tdecompress-tend, tdecode-tdecompress))
         return decoded
       except:
-        #  traceback.print_exc()
+         traceback.print_exc()
         pass
       return []
 
