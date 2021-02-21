@@ -235,12 +235,12 @@ For more results, please check our [paper](https://arxiv.org/abs/1910.01055).
 ## Citations
 To cite this repository in publications:
 ```
-@misc{quantized-rl,
-    title={Quantized Reinforcement Learning (QUARL)},
-    author={Srivatsan Krishnan and Sharad Chitlangia and Maximilian Lam and Zishen Wan and Aleksandra Faust and Vijay Janapa Reddi},
-    year={2019},
-    eprint={1910.01055},
-    archivePrefix={arXiv},
-    primaryClass={cs.LG}
+@misc{lam2021quantized,
+      title={Quantized Reinforcement Learning (QUARL)}, 
+      author={Maximilian Lam and Sharad Chitlangia and Srivatsan Krishnan and Zishen Wan and Gabriel Barth-Maron and Aleksandra Faust and Vijay Janapa Reddi},
+      year={2021},
+      eprint={1910.01055},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG}
 }
 ```
