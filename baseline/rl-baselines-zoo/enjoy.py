@@ -4,6 +4,12 @@ import warnings
 import sys
 import pkg_resources
 import importlib
+import stable_baselines
+# plot
+import matplotlib.pyplot as plt
+
+import scipy.stats as ss
+import scipy
 
 # For pybullet envs
 warnings.filterwarnings("ignore")
@@ -17,21 +23,38 @@ try:
     import highway_env
 except ImportError:
     highway_env = None
-import stable_baselines
+
 from stable_baselines.common import set_global_seeds
 from stable_baselines.common.vec_env import VecNormalize, VecFrameStack, VecEnv
 
 from utils import ALGOS, create_test_env, get_latest_run_id, get_saved_hyperparams
 
 # Fix for breaking change in v2.6.0
-if pkg_resources.get_distribution("stable_baselines").version >= "2.6.0":
-    sys.modules['stable_baselines.ddpg.memory'] = stable_baselines.deepq.replay_buffer
-    stable_baselines.deepq.replay_buffer.Memory = stable_baselines.deepq.replay_buffer.ReplayBuffer
+#if pkg_resources.get_distribution("stable_baselines").version >= "2.6.0":
+sys.modules['stable_baselines.ddpg.memory'] = stable_baselines.deepq.replay_buffer
+stable_baselines.deepq.replay_buffer.Memory = stable_baselines.deepq.replay_buffer.ReplayBuffer
 
+def kl_scipy(p, q):
+    p = np.asarray(p, dtype=np.float32)
+    q = np.asarray(q, dtype=np.float32)
+    p = p.flatten()
+    q = q.flatten()
+    p[p==0] = np.finfo(float).eps
+    q[q==0] = np.finfo(float).eps
+    if(len(p)>1):
+        pg = ss.gaussian_kde(p)
+        qg = ss.gaussian_kde(q)
+        kl = ss.entropy(pg(p),qg(q))
+        print("p,q",ss.entropy(pg(p),qg(q)))
+        print("len of p",len(p))
+        return kl
+    else:
+        return 0
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--env', help='environment ID', type=str, default='CartPole-v1')
     parser.add_argument('-f', '--folder', help='Log folder', type=str, default='trained_agents')
+    parser.add_argument('-fq', '--folder_q', help='Log folder', type=str, default='trained_agents')
     parser.add_argument('--algo', help='RL Algorithm', default='ppo2',
                         type=str, required=False, choices=list(ALGOS.keys()))
     parser.add_argument('-n', '--n-timesteps', help='number of timesteps', default=1000,
@@ -62,6 +85,7 @@ def main():
     env_id = args.env
     algo = args.algo
     folder = args.folder
+    folder_q = args.folder_q
 
     if args.exp_id == 0:
         args.exp_id = get_latest_run_id(os.path.join(folder, algo), env_id)
@@ -73,6 +97,11 @@ def main():
     else:
         log_path = os.path.join(folder, algo)
 
+    # Sanity checks
+    if args.exp_id > 0:
+        log_path_q = os.path.join(folder_q, algo, '{}_{}'.format(env_id, args.exp_id))
+    else:
+        log_path_q = os.path.join(folder_q, algo)
 
     assert os.path.isdir(log_path), "The {} folder was not found".format(log_path)
 
@@ -81,6 +110,12 @@ def main():
         model_path = "{}/{}.{}".format(log_path, env_id, ext)
         found = os.path.isfile(model_path)
         if found:
+            break
+    found_q = False
+    for ext in ['pkl', 'zip']:
+        model_path_q = "{}/{}.{}".format(log_path_q, env_id, ext)
+        found_q = os.path.isfile(model_path_q)
+        if found_q:
             break
 
     if not found:
@@ -108,6 +143,8 @@ def main():
     load_env = None if algo == 'acer' else env
     model = ALGOS[algo].load(model_path, env=load_env)
 
+    model_q = ALGOS[algo].load(model_path_q, env=load_env)
+
     obs = env.reset()
 
     # Force deterministic for DQN, DDPG, SAC and HER (that is a wrapper around)
@@ -118,8 +155,15 @@ def main():
     ep_len = 0
     # For HER, monitor success rate
     successes = []
+    action_q_list = []
+    action_list = []
+    kl_list = []
     for _ in range(args.n_timesteps):
         action, _ = model.predict(obs, deterministic=deterministic)
+        action_q, _ = model_q.predict(obs, deterministic=deterministic)
+        action_list.append(action.flatten().tolist())
+        action_q_list.append(action_q.flatten().tolist())
+
         # Random Agent
         # action = [env.action_space.sample()]
         # Clip Action to avoid out of bound errors
@@ -141,6 +185,23 @@ def main():
                     print("Atari Episode Score: {:.2f}".format(episode_infos['r']))
                     print("Atari Episode Length", episode_infos['l'])
 
+                    # calculate KL-divergence
+                    flat_action = [item for sublist in action_list for item in sublist]
+                    flat_action_q = [item for sublist in action_q_list for item in sublist]
+                    kl_list.append(kl_scipy(flat_action, flat_action_q))
+                    plt.hist(flat_action, bins=20, label='action')
+                    plt.hist(flat_action_q, bins=20, label='action_q')
+                    plt.legend()
+                    # save the figure
+                    # append the env-name to the file-name
+                    # appen algo name to the file-name
+                    plt.savefig(os.path.join('action_hist_' + env_id + '_' + algo + '.png'))
+                    plt.close()
+                    flat_action = []
+                    flat_action_q = []
+                    action_list = []
+                    action_q_list = []
+
             if done and not is_atari and args.verbose > 0:
                 # NOTE: for env using VecNormalize, the mean reward
                 # is a normalized reward when `--norm_reward` flag is passed
@@ -149,6 +210,22 @@ def main():
                 episode_rewards.append(episode_reward)
                 episode_reward = 0.0
                 ep_len = 0
+
+                # calculate KL-divergence
+                flat_action = [item for sublist in action_list for item in sublist]
+                flat_action_q = [item for sublist in action_q_list for item in sublist]
+                kl_list.append(kl_scipy(flat_action, flat_action_q))
+                plt.hist(flat_action, bins=20, label='action')
+                plt.hist(flat_action_q, bins=20, label='action_q')
+                plt.legend()
+                # save the figure
+                # append the env-name to the file-name
+                plt.savefig(os.path.join('action_hist_' + env_id + '_' + algo + '.png'))
+                plt.close()
+                flat_action = []
+                flat_action_q = []
+                action_list = []
+                action_q_list = []
 
             # Reset also when the goal is achieved when using HER
             if done or infos[0].get('is_success', False):
@@ -179,6 +256,16 @@ def main():
             # SubprocVecEnv
             env.close()
 
+    # plot histogram of action and action_q
+
+
+    #plt.savefig('action_histogram.png')
+
+    # calculate kl-divergence over action dist
+    # get the mean of a list
+    print("KL-Lists:", kl_list)
+    mean_kl = np.mean(kl_list)
+    print("Mean KL-Divergence: {:.5f}".format(mean_kl))
 
 if __name__ == '__main__':
     main()
